@@ -1,0 +1,15 @@
+{
+  "cache_hits": 62,
+  "chat_calls": 0,
+  "chat_model": "openai/gpt-oss-120b",
+  "chat_provider": "https://api.groq.com/openai/v1",
+  "cost_usd": 0.0,
+  "embed_calls": 0,
+  "embed_model": "models/gemini-embedding-001",
+  "input_tokens": 0,
+  "llm_calls": 0,
+  "output_tokens": 0,
+  "rows_written": 21,
+  "seed": 42,
+  "temperature": 0.0
+}

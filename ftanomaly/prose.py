@@ -20,6 +20,28 @@ class GroundingError(ValueError):
     """The generated reason makes a claim the evidence does not support."""
 
 
+# Models reach for typographic punctuation. Left in the CSV it renders as
+# mojibake when the file is opened under cp1252, so the output is kept ASCII.
+_ASCII_MAP = {
+    "‐": "-", "‑": "-", "‒": "-", "–": "-", "—": "-",
+    "‘": "'", "’": "'", "‚": "'",
+    "“": '"', "”": '"', "„": '"',
+    "…": "...", " ": " ", "­": "",
+}
+
+
+def to_ascii(text: str) -> str:
+    """Fold a model reply down to plain ASCII.
+
+    A BOM would be the other way to keep Excel happy, but it would also
+    prepend a stray character to the first column name and break a strict
+    header comparison against the sample output.
+    """
+    for bad, good in _ASCII_MAP.items():
+        text = text.replace(bad, good)
+    return text.encode("ascii", "replace").decode("ascii")
+
+
 JUSTIFIED_PROMPT = """Write one or two plain sentences explaining why this
 freight cost rise is justified. State the verdict, name the note by id, and
 reflect what the note actually says including its dates.
@@ -104,6 +126,6 @@ def write_reason(v: Verdict, client: LLMClient, all_note_ids: set[str]) -> str:
         prompt = UNEXPLAINED_PROMPT.format(rejected=rejected, **common)
         key = client.key_for("reason", m.route, m.week_of.isoformat(), "unexplained")
 
-    text = " ".join(client.chat(prompt, cache_key=key).split())
+    text = to_ascii(" ".join(client.chat(prompt, cache_key=key).split()))
     validate_reason(text, v.matched.note.note_id if v.matched else None, all_note_ids)
     return text

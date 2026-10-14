@@ -23,7 +23,7 @@ PEER_THRESHOLD_PCT = 20.0
 # embedding models, so retrieval borrows Gemini's free embedding endpoint.
 CHAT_BASE_URL = "https://api.groq.com/openai/v1"
 CHAT_MODEL = "openai/gpt-oss-120b"
-EMBED_MODEL = "models/text-embedding-004"
+EMBED_MODEL = "models/gemini-embedding-001"
 TEMPERATURE = 0.0
 SEED = 42
 RETRIEVAL_TOP_K = 3

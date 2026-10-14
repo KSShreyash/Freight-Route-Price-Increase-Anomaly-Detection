@@ -1,6 +1,28 @@
 import pytest
 
-from ftanomaly.prose import GroundingError, validate_reason
+from ftanomaly.prose import GroundingError, to_ascii, validate_reason
+
+
+def test_to_ascii_replaces_typographic_punctuation():
+    """The model emits non-breaking hyphens and em dashes. Left in, they
+    render as mojibake when the CSV is opened in Excel under cp1252."""
+    assert to_ascii("Ahmedabad‑Mumbai") == "Ahmedabad-Mumbai"
+    assert to_ascii("justified – note N003") == "justified - note N003"
+    assert to_ascii("rise — see note") == "rise - see note"
+    assert to_ascii("the week") == "the week"
+    assert to_ascii("“stable” demand") == '"stable" demand'
+    assert to_ascii("it’s fine") == "it's fine"
+
+
+def test_to_ascii_output_is_always_encodable_as_ascii():
+    """Any character the map misses must still not reach the CSV."""
+    weird = "cost rose ≥ 5% ± 2 中文"
+    assert to_ascii(weird).encode("ascii")
+
+
+def test_to_ascii_leaves_plain_text_untouched():
+    plain = "Matches note N002 dated 2025-01-20: a festival surcharge."
+    assert to_ascii(plain) == plain
 
 ALL = {"N001", "N002", "N003", "N004", "N005", "N006"}
 

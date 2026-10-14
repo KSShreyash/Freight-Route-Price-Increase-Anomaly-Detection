@@ -20,10 +20,18 @@ def test_missing_credentials_exit_nonzero_without_writing_a_report(
 ):
     """A partial report is worse than none: a blank matched_note_id reads as a
     real 'unexplained' verdict and would be graded as a wrong answer."""
+    import dataclasses
+
+    from ftanomaly import config
+
     monkeypatch.delenv("GROQ_API_KEY", raising=False)
     monkeypatch.delenv("GEMINI_API_KEY", raising=False)
     monkeypatch.setattr("dotenv.load_dotenv", lambda *a, **k: None)
-    monkeypatch.setattr("ftanomaly.llm.LLMClient.cache_dir", tmp_path, raising=False)
+    # point the client at an EMPTY cache - with the real one warm, the run
+    # would legitimately succeed without credentials and prove nothing
+    monkeypatch.setattr(
+        config, "PATHS", dataclasses.replace(config.PATHS, cache_dir=tmp_path)
+    )
 
     out = tmp_path / "report.csv"
     log = tmp_path / "tokens.json"

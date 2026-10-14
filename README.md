@@ -23,11 +23,11 @@ Two free-tier keys are needed:
 | purpose | provider | where |
 |---|---|---|
 | chat | Groq, `openai/gpt-oss-120b` (open weights) | <https://console.groq.com/keys> |
-| embeddings | Gemini, `text-embedding-004` | <https://aistudio.google.com/apikey> |
+| embeddings | Gemini, `gemini-embedding-001` | <https://aistudio.google.com/apikey> |
 
 Two providers because **Groq serves no embedding models** — its model list
 contains none and `/embeddings` returns `model_not_found`. Chat stays on an
-open-weight model as the brief prefers; only the vectors come from Gemini.
+open-weight model as the brief prefers; only the vectors come from Gemini. (`text-embedding-004` is retired; the model id was confirmed against a live `list_models` call rather than assumed.)
 
 ---
 
@@ -181,23 +181,34 @@ otherwise look like success.
 - Output rows are sorted by `(week_of, route)`; retrieval ties break on note id.
   No ordering depends on dict iteration or an unstable sort.
 
-Evidence lives in `reports/reproducibility.md` (three diffs and three sha256s).
+Evidence lives in `reports/reproducibility.md`: three runs, two empty diffs, and
+three identical sha256 hashes, each run making zero API calls.
 
 ---
 
 ## Cost
 
-Measured figures for a full run are written to `reports/token_log.json` by every
-invocation — model, temperature, seed, input/output tokens, call counts and
-cache hits.
+Measured, for one full run from an **empty cache** over the entire shipment file:
 
-Call volume is bounded by design: **10 enrichment calls** (one per note, cached
-forever), **one embedding per note plus one per query**, and **one prose call per
-flagged row**. Nothing scales with the 2,940 input shipments.
+| | |
+|---|---|
+| chat calls | 31 (10 note enrichments + 21 explanations) |
+| embedding calls | 31 (10 notes + 21 queries) |
+| **total LLM calls** | **62** |
+| input tokens | 11,017 |
+| output tokens | 8,886 |
+| **cost** | **$0.00** — both providers on their free tiers |
 
-Both providers are used on their free tiers, which bill zero; the rate constants
-in `ftanomaly/cli.py` are set to 0.0 and the token counts are reported regardless
-so the number is measured rather than assumed.
+A warm run is **0 calls and 62 cache hits**. Every invocation rewrites
+`reports/token_log.json` with the real figures.
+
+Call volume is bounded by design: one enrichment per note, one embedding per note
+plus one per query, one explanation per flagged row. **Nothing scales with the
+2,940 input shipments** — the statistics are pure Python.
+
+The rate constants in `ftanomaly/cli.py` are 0.0 because both free tiers bill
+zero; token counts are reported regardless so the figure is measured rather than
+assumed. Set them to the published paid rates and the same log reports real money.
 
 One honest caveat: `gpt-oss-120b` is a reasoning model, and its **completion
 token count varies between identical runs even when the content is identical**
@@ -243,7 +254,7 @@ ftanomaly/
   cli.py         entrypoint
 eval/            hand-labeled set + scorer
 docs/            THRESHOLD.md (derivation), plans/
-tests/           63 offline tests + live tests gated on credentials
+tests/           77 tests, all passing with credentials present
 ```
 
 Tests needing real credentials are marked `live` and **skip with a stated
