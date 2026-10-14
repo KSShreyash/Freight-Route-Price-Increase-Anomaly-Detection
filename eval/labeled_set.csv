@@ -1,0 +1,22 @@
+route,week_of,expected_flagged,expected_note_id,why
+Delhi-Jaipur,2024-11-11,Yes,,N007 is the only Delhi-Jaipur note: wrong date and it describes improved roads
+Delhi-Jaipur,2024-11-18,Yes,,same as the prior week; no note covers Nov 2024
+Ahmedabad-Mumbai,2025-01-20,No (justified),N002,festival surcharge on this exact corridor that week
+Chennai-Bangalore,2025-02-24,No (justified),N001,flooding Feb 24 to Mar 8 on this corridor
+Chennai-Bangalore,2025-03-03,No (justified),N001,week of Mar 3 to Mar 9 overlaps the disruption window
+Chennai-Bangalore,2025-03-10,Yes,,still elevated but N001 ended Mar 8; N009 describes a return to normal
+Chennai-Bangalore,2025-03-17,Yes,,outside N001; N009 is a recovery note not a cost-rise cause
+Mumbai-Delhi,2025-05-12,No (justified),N003,nationwide diesel rise from May 5; this is an own-history flag
+Mumbai-Pune,2025-06-23,Yes,,peer-relative drift; N003 lifts peers equally so it cannot explain it
+Mumbai-Pune,2025-09-15,Yes,,peer-relative drift with no covering note
+Mumbai-Pune,2025-10-06,Yes,,peer-relative drift with no covering note
+Mumbai-Pune,2025-10-20,Yes,,peer-relative drift with no covering note
+Mumbai-Pune,2025-10-27,Yes,,N010 says compliance costs were absorbed with no rate change
+Mumbai-Pune,2025-11-03,Yes,,peer-relative drift with no covering note
+Mumbai-Pune,2025-11-10,Yes,,peer-relative drift with no covering note
+Mumbai-Pune,2025-11-17,Yes,,peer-relative drift with no covering note
+Mumbai-Pune,2025-11-24,Yes,,peer-relative drift with no covering note
+Mumbai-Pune,2025-12-01,Yes,,peer-relative drift with no covering note
+Mumbai-Pune,2025-12-08,Yes,,peer-relative drift with no covering note
+Mumbai-Pune,2025-12-15,Yes,,peer-relative drift with no covering note
+Mumbai-Pune,2025-12-22,Yes,,peer-relative drift with no covering note
