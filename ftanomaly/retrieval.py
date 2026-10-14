@@ -40,6 +40,7 @@ class NoteIndex:
     def __init__(self) -> None:
         self._notes: list[EnrichedNote] = []
         self._vectors: list[list[float]] = []
+        self._built = False
 
     def __len__(self) -> int:
         return len(self._notes)
@@ -50,13 +51,21 @@ class NoteIndex:
 
     def build(self, enriched: list[EnrichedNote], client: LLMClient) -> None:
         self._notes = list(enriched)
-        self._vectors = client.embed([self._document(e) for e in self._notes])
+        self._vectors = (
+            client.embed([self._document(e) for e in self._notes])
+            if self._notes
+            else []
+        )
+        self._built = True
 
     def query(
         self, text: str, client: LLMClient, k: int = config.RETRIEVAL_TOP_K
     ) -> list[tuple[EnrichedNote, float]]:
-        if not self._notes:
+        if not self._built:
             raise RuntimeError("NoteIndex.query called before build")
+        if not self._notes:
+            # an empty notes corpus is legitimate: nothing can justify anything
+            return []
         qv = client.embed([text])[0]
         scored = [(e, cosine(qv, v)) for e, v in zip(self._notes, self._vectors)]
         # descending score, ties broken on note_id so the order is total

@@ -61,6 +61,25 @@ def test_allows_an_unexplained_reason_to_mention_why_a_note_was_rejected():
     )
 
 
+def test_works_with_note_ids_that_are_not_the_nNNN_format():
+    """A different notes file may id its rows differently. The validator must
+    read the ids it was given, not assume the shape of this corpus."""
+    ids = {"NOTE-1", "NOTE-2", "fuel-2025-05"}
+    validate_reason("Matches note NOTE-2 dated 2025-01-20.", "NOTE-2", ids)
+    validate_reason("Matches note fuel-2025-05: diesel rose.", "fuel-2025-05", ids)
+
+    with pytest.raises(GroundingError, match="must cite"):
+        validate_reason("A surcharge explains it.", "NOTE-2", ids)
+    with pytest.raises(GroundingError, match="unrelated note"):
+        validate_reason("Matches NOTE-2 and NOTE-1.", "NOTE-2", ids)
+
+
+def test_a_note_id_that_is_a_substring_of_another_is_not_confused():
+    ids = {"N1", "N12"}
+    with pytest.raises(GroundingError, match="must cite"):
+        validate_reason("Matches note N12.", "N1", ids)
+
+
 def test_ignores_a_note_id_that_does_not_exist_in_the_corpus():
     """A hallucinated id like N999 is not in ALL, so it must not be mistaken
     for a real citation that satisfies the requirement."""

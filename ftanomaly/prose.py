@@ -78,7 +78,14 @@ explained, and never use the words "matches", "justified by", "explained by",
 
 
 def validate_reason(text: str, matched_id: str | None, all_note_ids: set[str]) -> None:
-    mentioned = {m for m in re.findall(r"\bN\d{3}\b", text) if m in all_note_ids}
+    # Search for the ids this corpus actually uses rather than assuming they
+    # look like N001 - a different notes file may id its rows any way it likes.
+    # Longest first so "N12" is not credited when only "N1" was cited.
+    mentioned = {
+        nid
+        for nid in sorted(all_note_ids, key=len, reverse=True)
+        if re.search(rf"(?<!\w){re.escape(nid)}(?!\w)", text)
+    }
 
     if matched_id is None:
         if _JUSTIFY_WORDS.search(text):

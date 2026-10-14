@@ -74,3 +74,12 @@ def test_equal_scores_break_ties_on_note_id_so_order_is_total():
 def test_query_before_build_is_an_error_not_an_empty_result():
     with pytest.raises(RuntimeError, match="build"):
         NoteIndex().query("q", StubClient([], []))
+
+
+def test_an_empty_notes_file_yields_no_matches_rather_than_crashing():
+    """A notes corpus with zero rows is a legitimate input: every anomaly is
+    simply unexplained. It must not look like 'you forgot to call build'."""
+    index = NoteIndex()
+    index.build([], StubClient([], [1.0, 0.0]))
+    assert index.query("q", StubClient([], [1.0, 0.0])) == []
+    assert len(index) == 0
