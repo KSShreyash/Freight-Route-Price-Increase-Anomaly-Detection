@@ -195,9 +195,13 @@ Measured, for one full run from an **empty cache** over the entire shipment file
 | chat calls | 31 (10 note enrichments + 21 explanations) |
 | embedding calls | 31 (10 notes + 21 queries) |
 | **total LLM calls** | **62** |
-| input tokens | 11,017 |
-| output tokens | 8,886 |
+| input tokens | ~11,000 (11,017 and 11,273 on two cold runs) |
+| output tokens | ~8,800 (8,886 and 8,758 on two cold runs) |
 | **cost** | **$0.00** — both providers on their free tiers |
+
+Both cold runs produced **identical verdicts** (21 rows, 4 justified, eval 21/21);
+only the token counts moved, so the figures are given as a range rather than
+false precision. `reports/token_log_cold.json` holds one run verbatim.
 
 A warm run is **0 calls and 62 cache hits**. Every invocation rewrites
 `reports/token_log.json` with the real figures.
