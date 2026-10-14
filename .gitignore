@@ -2,5 +2,8 @@ __pycache__/
 *.pyc
 .env
 .pytest_cache/
-output/*.csv
-!output/.gitkeep
+
+# scratch files from the 3-run reproducibility check;
+# the deliverable output/anomaly_report.csv IS committed
+output/run_*.csv
+reports/tokens_run_*.json
