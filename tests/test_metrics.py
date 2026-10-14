@@ -54,6 +54,49 @@ def test_trailing_window_never_exceeds_eight(by_key):
     assert by_key[("Mumbai-Pune", dt.date(2025, 6, 2))].n_prior_weeks == 8
 
 
+def _rw(route, rtype, week, cost=1000.0, tkm=400.0):
+    from ftanomaly.loading import RouteWeek
+
+    return RouteWeek(route, rtype, dt.date.fromisoformat(week), cost, tkm, 3)
+
+
+def test_a_route_missing_some_weeks_does_not_crash():
+    """Real data has gaps. The supplied file is a complete 7x104 grid, so a
+    grid assumption survives it and then fails on anything else."""
+    rws = [
+        _rw("A-B", "Short", "2025-01-06"),
+        _rw("A-B", "Short", "2025-01-13"),
+        # A-B has no shipments the week of 2025-01-20
+        _rw("A-B", "Short", "2025-01-27"),
+        _rw("C-D", "Short", "2025-01-06"),
+        _rw("C-D", "Short", "2025-01-13"),
+        _rw("C-D", "Short", "2025-01-20"),
+        _rw("C-D", "Short", "2025-01-27"),
+    ]
+    out = build_metrics(rws)
+    assert len(out) == 7, "one row per observed route-week, not per grid cell"
+    assert ("A-B", dt.date(2025, 1, 20)) not in {(m.route, m.week_of) for m in out}
+
+
+def test_a_week_with_no_peers_present_yields_no_peer_comparison():
+    rws = [
+        _rw("A-B", "Short", "2025-01-06"),
+        _rw("A-B", "Short", "2025-01-13"),
+        _rw("C-D", "Short", "2025-01-06"),
+        # C-D absent on 2025-01-13, so A-B has no peer that week
+    ]
+    out = {(m.route, m.week_of): m for m in build_metrics(rws)}
+    assert out[("A-B", dt.date(2025, 1, 6))].vs_similar_routes is not None
+    assert out[("A-B", dt.date(2025, 1, 13))].vs_similar_routes is None
+
+
+def test_the_trailing_window_counts_observed_weeks_not_calendar_weeks():
+    """With a gap, the baseline uses the last 8 weeks that have data."""
+    weeks = ["2025-01-06", "2025-01-13", "2025-01-27"]   # 2025-01-20 missing
+    out = {m.week_of: m for m in build_metrics([_rw("A-B", "Short", w) for w in weeks])}
+    assert out[dt.date(2025, 1, 27)].n_prior_weeks == 2
+
+
 def test_peer_average_excludes_the_route_itself(by_key):
     """Mumbai-Pune and Delhi-Jaipur are the only two Short routes, so each
     one's peer average is exactly the other's cost."""

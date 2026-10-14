@@ -48,7 +48,11 @@ dataset (2024-01-01) has no prior weeks at all: its `vs_own_history` is empty
 and it can never be flagged on own-history. Its peer comparison still works.
 The trailing MAD needs at least 4 prior weeks before it is trusted.
 
-The dataset is a complete grid: 7 routes × 104 weeks = 728 route-weeks, no gaps.
+A route is evaluated only on the weeks it actually shipped in, and the trailing
+window counts **observed** weeks rather than calendar weeks. The supplied file
+happens to be a complete grid (7 routes × 104 weeks = 728 route-weeks, no gaps),
+but gaps in a different file are handled rather than assumed away: a week with no
+peers present simply gets no peer comparison.
 
 ---
 

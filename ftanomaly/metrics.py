@@ -54,19 +54,28 @@ def build_metrics(route_weeks: list[RouteWeek]) -> list[WeekMetrics]:
         for rw in route_weeks
     }
     route_type = {rw.route: rw.route_type for rw in route_weeks}
-    weeks = sorted({rw.week_of for rw in route_weeks})
     routes = sorted({rw.route for rw in route_weeks})
 
     by_type: dict[str, list[str]] = defaultdict(list)
     for r in routes:
         by_type[route_type[r]].append(r)
 
+    # A route is only evaluated on the weeks it actually shipped in. Real data
+    # has gaps, and indexing a route x week grid would raise on the first one.
+    weeks_of: dict[str, list[dt.date]] = defaultdict(list)
+    for rw in route_weeks:
+        weeks_of[rw.route].append(rw.week_of)
+    for ws in weeks_of.values():
+        ws.sort()
+
     out: list[WeekMetrics] = []
     for route in routes:
-        for i, week in enumerate(weeks):
+        own_weeks = weeks_of[route]
+        for i, week in enumerate(own_weeks):
             current = cpk[(route, week)]
+            # the trailing window counts observed weeks, not calendar weeks
             prior = [
-                cpk[(route, weeks[j])]
+                cpk[(route, own_weeks[j])]
                 for j in range(max(0, i - config.TRAILING_WEEKS), i)
             ]
 
@@ -80,7 +89,7 @@ def build_metrics(route_weeks: list[RouteWeek]) -> list[WeekMetrics]:
             peers = [
                 cpk[(other, week)]
                 for other in by_type[route_type[route]]
-                if other != route
+                if other != route and (other, week) in cpk
             ]
             peer = (current / (sum(peers) / len(peers)) - 1) * 100 if peers else None
 
