@@ -23,6 +23,17 @@ def monday_of(d: dt.date) -> dt.date:
     return d - dt.timedelta(days=d.weekday())
 
 
+REQUIRED_COLUMNS = (
+    "origin",
+    "destination",
+    "route_type",
+    "quantity_tonnes",
+    "distance_km",
+    "freight_cost_inr",
+    "shipment_date",
+)
+
+
 def load_route_weeks(path: Path) -> list[RouteWeek]:
     cost: dict[tuple[str, dt.date], float] = defaultdict(float)
     tonne_km: dict[tuple[str, dt.date], float] = defaultdict(float)
@@ -30,7 +41,14 @@ def load_route_weeks(path: Path) -> list[RouteWeek]:
     route_type: dict[str, str] = {}
 
     with path.open(newline="", encoding="utf-8") as fh:
-        for row in csv.DictReader(fh):
+        reader = csv.DictReader(fh)
+        missing = [c for c in REQUIRED_COLUMNS if c not in (reader.fieldnames or [])]
+        if missing:
+            raise ValueError(
+                f"{path.name} is missing required column(s): {', '.join(missing)}. "
+                f"Expected: {', '.join(REQUIRED_COLUMNS)}"
+            )
+        for row in reader:
             route = f"{row['origin']}-{row['destination']}"
             route_type[route] = row["route_type"]
             week = monday_of(dt.date.fromisoformat(row["shipment_date"]))

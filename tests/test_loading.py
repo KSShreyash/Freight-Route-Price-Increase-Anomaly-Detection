@@ -26,6 +26,25 @@ def test_route_types_come_from_the_file_not_derived():
     assert types["Mumbai-Delhi"] == "Long"
 
 
+def test_a_missing_column_names_the_file_and_the_column(tmp_path):
+    """A bare KeyError('distance_km') tells someone swapping in their own file
+    almost nothing about what to fix."""
+    import pytest
+
+    bad = tmp_path / "ships.csv"
+    bad.write_text(
+        "shipment_id,origin,destination,route_type,quantity_tonnes,shipment_date\n"
+        "S1,A,B,Short,10,2025-01-06\n",
+        encoding="utf-8",
+    )
+    with pytest.raises(ValueError) as exc:
+        load_route_weeks(bad)
+    msg = str(exc.value)
+    assert "distance_km" in msg
+    assert "freight_cost_inr" in msg
+    assert bad.name in msg
+
+
 def test_aggregates_are_sums():
     rws = {(r.route, r.week_of): r for r in load_route_weeks(config.PATHS.shipments)}
     wk = rws[("Mumbai-Pune", dt.date(2024, 1, 1))]

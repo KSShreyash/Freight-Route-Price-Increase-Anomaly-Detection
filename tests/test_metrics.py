@@ -60,6 +60,17 @@ def _rw(route, rtype, week, cost=1000.0, tkm=400.0):
     return RouteWeek(route, rtype, dt.date.fromisoformat(week), cost, tkm, 3)
 
 
+def test_a_route_week_with_zero_tonne_km_is_skipped_not_divided_by():
+    """Cost per tonne-km is undefined when nothing moved any distance. Dropping
+    the observation beats crashing the run or inventing a rate."""
+    rws = [
+        _rw("A-B", "Short", "2025-01-06", cost=1000.0, tkm=0.0),   # undefined
+        _rw("A-B", "Short", "2025-01-13", cost=1000.0, tkm=400.0),
+    ]
+    out = build_metrics(rws)
+    assert [m.week_of for m in out] == [dt.date(2025, 1, 13)]
+
+
 def test_a_route_missing_some_weeks_does_not_crash():
     """Real data has gaps. The supplied file is a complete 7x104 grid, so a
     grid assumption survives it and then fails on anything else."""

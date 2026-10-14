@@ -49,10 +49,14 @@ def mad_pct(xs: list[float]) -> float:
 
 
 def build_metrics(route_weeks: list[RouteWeek]) -> list[WeekMetrics]:
+    # A week where nothing moved any distance has no definable rate; drop the
+    # observation rather than divide by zero or invent a number for it.
     cpk = {
         (rw.route, rw.week_of): rw.total_cost / rw.total_tonne_km
         for rw in route_weeks
+        if rw.total_tonne_km > 0
     }
+    route_weeks = [rw for rw in route_weeks if (rw.route, rw.week_of) in cpk]
     route_type = {rw.route: rw.route_type for rw in route_weeks}
     routes = sorted({rw.route for rw in route_weeks})
 
