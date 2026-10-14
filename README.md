@@ -1,4 +1,4 @@
-# FreightTiger — Shipping-Cost Anomaly Assistant
+# Shipping-Cost Anomaly Assistant
 
 Spots weeks where a route's freight cost rose in a way that looks out of the
 ordinary, checks a small corpus of real-world notes for a genuine cause, and
