@@ -90,7 +90,13 @@ Retrieval proposes; deterministic rules dispose. The LLM never decides a verdict
    `window_start`, `window_end`, `in_dataset`, `magnitude_pct`. This is the only
    place language understanding is needed, and it is what models are good at.
 2. **Retrieval.** Notes are embedded and ranked by cosine similarity against a
-   query built from the route and week.
+   query built from the route and week. Retrieval **ranks but never filters**:
+   the gate below sees every note, and only the closest few are passed to the
+   explanation step as context. A top-k cut would let a weak embedding turn a
+   genuinely justified row into a false "unexplained" — the error the brief
+   scores hardest — and on a ten-note corpus it buys nothing. This is pinned by
+   `test_a_justifying_note_ranked_last_by_retrieval_still_justifies`, which
+   ranks the only valid note dead last and still expects it to win.
 3. **The gate** (`ftanomaly/verdict.py`) — plain Python, no model. A note
    justifies a candidate only if **all** of these hold:
    - it describes costs going **up** (`direction == "raises"`)

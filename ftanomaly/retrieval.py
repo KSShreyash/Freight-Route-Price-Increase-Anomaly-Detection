@@ -41,6 +41,9 @@ class NoteIndex:
         self._notes: list[EnrichedNote] = []
         self._vectors: list[list[float]] = []
 
+    def __len__(self) -> int:
+        return len(self._notes)
+
     @staticmethod
     def _document(e: EnrichedNote) -> str:
         return f"{e.note.applies_to} ({e.note.date.isoformat()}): {e.note.text}"

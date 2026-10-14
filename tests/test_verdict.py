@@ -84,6 +84,44 @@ def test_open_ended_window_applies_to_any_later_week():
     assert note_applies(e, c) is True
 
 
+def test_a_justifying_note_ranked_last_by_retrieval_still_justifies():
+    """Retrieval quality must not decide a verdict. With a 10-note corpus,
+    a top-k cut would turn a bad embedding into a false 'unexplained'."""
+    from ftanomaly.retrieval import NoteIndex
+    from ftanomaly.verdict import decide
+
+    # four notes; only the LAST one actually justifies the candidate
+    irrelevant = [
+        _note(f"N00{i}", "All Routes", "none", "all_routes", "2025-01-01", None)
+        for i in (1, 2, 3)
+    ]
+    justifier = _note(
+        "N004", "Chennai-Bangalore", "raises", "route", "2025-02-24", "2025-03-08"
+    )
+
+    class StubClient:
+        """Ranks the justifying note dead last."""
+
+        def __init__(self):
+            self.n = 0
+
+        def embed(self, texts):
+            self.n += 1
+            if self.n == 1:                      # build: document vectors
+                return [[1.0, 0.0], [1.0, 0.0], [1.0, 0.0], [0.0, 1.0]]
+            return [[1.0, 0.0]]                  # query vector
+
+    client = StubClient()
+    index = NoteIndex()
+    index.build(irrelevant + [justifier], client)
+
+    c = _candidate("Chennai-Bangalore", dt.date(2025, 3, 3))
+    verdicts = decide([c], index, client)
+
+    assert verdicts[0].matched is not None, "worst-ranked note was never gated"
+    assert verdicts[0].matched.note.note_id == "N004"
+
+
 def test_a_week_overlapping_only_the_window_start_applies():
     """The window opens mid-week: Mon 2025-02-24 .. Sun 2025-03-02 overlaps a
     window that opens on the Friday."""

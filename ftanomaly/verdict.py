@@ -18,6 +18,7 @@ from __future__ import annotations
 import datetime as dt
 from dataclasses import dataclass
 
+from . import config
 from .detect import Candidate
 from .llm import LLMClient
 from .notes import EnrichedNote
@@ -68,11 +69,23 @@ def decide(
 ) -> list[Verdict]:
     verdicts: list[Verdict] = []
     for c in candidates:
-        retrieved = index.query(
-            query_text_for(c.metrics.route, c.metrics.week_of), client
+        # Rank the WHOLE corpus, never a top-k slice. Retrieval orders the
+        # notes; it must not decide which ones the gate is allowed to see.
+        # With a small corpus a top-k cut buys nothing and turns a weak
+        # embedding into a false "unexplained" - the one error the brief
+        # scores hardest.
+        ranked = index.query(
+            query_text_for(c.metrics.route, c.metrics.week_of), client, k=len(index)
         )
-        applicable = [e for e, _ in retrieved if note_applies(e, c)]
+        applicable = [e for e, _ in ranked if note_applies(e, c)]
         # deterministic pick: best-ranked applicable note, ties on note_id
         matched = applicable[0] if applicable else None
-        verdicts.append(Verdict(candidate=c, matched=matched, retrieved=retrieved))
+        # keep only the closest few for the prose context
+        verdicts.append(
+            Verdict(
+                candidate=c,
+                matched=matched,
+                retrieved=ranked[: config.RETRIEVAL_TOP_K],
+            )
+        )
     return verdicts
